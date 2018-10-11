@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>SIEM Fuzzer | Dashboard</title>
+
+    <!-- Bootstrap core CSS-->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Fullscreen Modal -->
+    <link href="css/bootstrap-modal-fullscreen.min.css" rel="stylesheet"/>
+
+    <!-- Custom fonts for this template-->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+
+    <!-- Page level plugin CSS-->
+    <link href="vendor/datatables/dataTables.bootstrap4.css" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="css/sb-admin.css" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="css/dashboard.css" rel="stylesheet">
+    
+
+  </head>
+
+  <body id="page-top">
+
+    <nav class="navbar navbar-expand navbar-dark bg-dark static-top">
+      <a class="navbar-brand mr-1" href="/dashboard"><i class="fab fa-searchengin"></i> SIEM Fuzzer</a>
+      <!-- Navbar Search -->
+      <form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
+        <div class="input-group">
+        </div>
+      </form>
+
+      <!-- Navbar -->
+      <ul class="navbar-nav ml-auto ml-md-0">
+        <li class="nav-item">
+          <a class="nav-link" href="/logout?csrf={{ csrf_token }}">Logout <i class="fas fa-sign-out-alt"></i></a>
+        </li>
+      </ul>
+
+    </nav>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <ul class="sidebar navbar-nav">
+        <li class="nav-item dropdown show active">
+            <a style="color: white;" href="#" id="dashboard-nav" class="nav-link">
+                <i class="fas fa-fw fa-folder"></i>
+                <span>Dashboard</span>
+              </a>
+            <a style="color: white;" class="nav-link dropdown-toggle tools-navbar" id="pagesDropdown" role="button" data-toggle="" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-fw fa-wrench"></i>
+              <span>Tools</span>
+            </a>
+            <div class="dropdown-menu show" aria-labelledby="pagesDropdown" x-placement="top-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(5px, -107px, 0px);">
+              <h6 class="dropdown-header">Offensive Tools:</h6>
+              <a class="dropdown-item" id="fuzzer" href="#fuzzer">Protocol Fuzzer</a>
+              <div class="dropdown-divider"></div>
+              <h6 class="dropdown-header">Analytic Tools:</h6>
+              <a class="dropdown-item" id="pingbacks" href="#pingbacks">Successful Pingbacks</a>
+              {% if is_admin %}
+              <div class="dropdown-divider"></div>
+              <h6 class="dropdown-header">Administrator Tools:</h6>
+              <a class="dropdown-item" id="administrator" href="#administrator">Administrator Panel</a>
+              {% endif %}
+            </div>
+          </li>
+
+      </ul>
+
+      <div id="content-wrapper">
+
+        <div class="container-fluid">
+
+          <!-- Breadcrumbs-->
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="#">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active" id="breadcrumb-current">Overview</li>
+          </ol>
+
+          <!-- Dashboard -->
+          <div id="dashboard">
+            <h2>Welcome, {{ username }}</h2>
+            <hr>
+            <div class="container" style="width: 75%; float: left;">
+              {% if is_admin %}
+              <div class="card" style="width:48%; height: 250px; padding: 5px; float: right;">
+                <i class="fas fa-user-cog" style="text-align: center; font-size: 50px;"></i>
+                <div class="card-body">
+                  <h4 class="card-title">Administrator Panel</h4>
+                  <p class="card-text">Panel for administrative actions.</p>
+                  <a href="#administrator" class="btn btn-primary">View Panel</a>
+                </div>
+              </div>
+              {% endif %}
+              <div class="card" style="width:48%; height: 250px; padding: 5px;">
+                <i class="fas fa-bomb" style="text-align: center; font-size: 50px;"></i>
+                <div class="card-body">
+                  <h4 class="card-title">Protocol Fuzzer</h4>
+                  <p class="card-text">Fuzz Non-HTTP Protocols with blind based payloads.</p>
+                  <a href="#fuzzer" class="btn btn-primary">View Panel</a>
+                </div>
+              </div>
+              <br>
+              <div class="card" style="width:48%; height: 250px; padding: 5px;">
+                <i class="fas fa-clipboard-check" style="text-align: center; font-size: 50px;"></i>
+                <div class="card-body">
+                  <h4 class="card-title">Successful Pingbacks</h4>
+                  <p class="card-text">View successful pingbacks and information correlated to the successful payload.</p>
+                  <a href="#pingbacks" class="btn btn-primary">View Panel</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+    <!-- Fuzz Control Panel-->
+          <div class="fuzzer">
+            <form>
+              <div class="form-group">
+                <label for="comment">Host List:</label>
+                <textarea class="form-control" rows="5" id="ssh_hosts"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="comment">Protocols to Fuzz:</label>
+                <select class="form-control" id="protocols">
+                  <option>All Supported Protocols</option>
+                  <option>SSH</option>
+                  <option>RDP</option>
+                  <option>SMB</option>
+                </select>
+              </div>
+              <input class="form-control" placeholder="Username Payload" id="fuzz_payload"></input><br>
+              <input class="form-control" placeholder="Port" value="22" id="fuzz_port"></input><br>
+              <button class="btn btn-primary" onclick="javascript:fuzz()" type="submit">Fuzz Selected Protocol(s)</button><br/>
+              <hr>
+              Blind XSS Payload: <a href="{{ pingback_url }}">{{ pingback_url }}</a>
+            </form>
+          </div>
+
+    <!-- Pingbacks -->
+    <div class="pingbacks" style="width: 95%;">
+      <table class="table table-lg">
+        <thead>
+          <tr>
+            <th scope="col">Host</th>
+            <th scope="col">Pingback Type</th>
+            <th scope="col">View Payload Information</th>
+          </tr>
+        </thead>
+        <tbody id="fires">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pingback Modal -->
+    <div class="modal fade" id="payloadFire" tabindex="-1" role="dialog" aria-labelledby="payloadFire" aria-hidden="true">
+      <div class="modal-dialog" style="min-width: 98%; min-height: 98%; margin: 0px; margin-right: auto; margin-left: auto; margin-top: 15px;" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="payload-fire-modal-title modal-title" id="payloadFire">Payload Details</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body invite-modal-body">
+            <div class="row" style="min-height: 60%;">
+              <div class="col-8" style="float: left;">
+                <div class="card">
+                    <div class="card-header">
+                      Information
+                    </div>
+                    <code class="card-body" style="color: darkslategrey; min-height: 30%;">
+                      <div id="payloadInformation">
+                      </div>
+                    </code>
+                  </div> 
+                  <br>
+                  <div class="card">
+                    <div class="card-header">
+                      Document Object Model
+                    </div>
+                    <pre class="card-body" id="domData" style="width: 100%; height: 100%; font-family: monospace; max-height: 200px; overflow:scroll; color: black; padding: 15px;"></pre>
+                  </div>         
+              </div>
+              <div class="col-sm" style="float: right;">
+                <div class="card">
+                  <div class="card-header">
+                    Screenshot
+                  </div>
+                  <a id="pingback_url" href="#"><img id="pingback_img" style="height: auto; margin: 5px; text-align: center; width: 98%; border-radius: 3px;"/></a>
+                  <hr>
+                  <strong style="font-family: monospace; font-size: 10px; padding: 2px; padding-left: 5px;">Timestamp</strong><label id="localTimeTriggered" style="font-family: monospace; font-size: 10px; padding: 2px; padding-left: 5px;"/></p>
+                </div>
+              </div>
+            </div>
+            <br/>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% if is_admin %}
+    <!-- Administrator Panel -->
+    <div class="adminpanel">
+      <div style="width: 350px;">
+        <label>Invite User</label>
+        <form>
+          <input type="email" class="form-control" id="newUser" placeholder="E-Mail"><br>
+          <select class="form-control" id="userTypeSelection">
+            <option value="Invalid Selection!">User Category</option>
+            <option value="0">Regular User</option>
+            <option value="1">Administrator</option>
+          </select><br/>
+          <button class="btn btn-primary" onclick="javascript:inviteNewUser()" data-toggle="modal" data-target="#inviteSent" type="submit">Send Invite</button>
+        </form>
+      </div>
+      <hr>
+      <div style="width: 350px;">
+          <label>Deactivate User</label>
+          <form>
+            <input type="text" class="form-control" id="deactivateUsername" placeholder="Username"><br>
+            <button class="btn btn-danger" onclick="javascript:deactivateUser()" data-toggle="modal" data-target="#deactivate" type="submit">Deactivate User</button>
+          </form>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div class="modal fade" id="inviteSent" tabindex="-1" role="dialog" aria-labelledby="inviteSent" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="invite-modal-title modal-title" id="inviteSent">Invite Sent!</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body invite-modal-body">
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Deactivate Modal -->
+    <div class="modal fade" id="deactivate" tabindex="-1" role="dialog" aria-labelledby="deactivate" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deactivate">User De-activated!</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body deactivate-modal-body">
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Page level plugin JavaScript-->
+    <script src="vendor/chart.js/Chart.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin.min.js"></script>
+
+    <!-- Demo scripts for this page-->
+    <script src="js/demo/datatables-demo.js"></script>
+    <script src="js/demo/chart-area-demo.js"></script>
+    {% if is_admin %}
+    <script src="js/admin.js"></script>
+    {% else %}
+    <script src="js/app.js"></script>
+    {% endif %}
+  </body>
+
+</html>
