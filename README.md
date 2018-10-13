@@ -10,3 +10,4 @@ Research exploiting SIEM Integrations via Non-HTTP protocols
 2. Implement RDP Fuzzing
 3. Implement Blind Code Execution Payloads
 4. Implement Blind Code Execution Payload Reporting
+5. Fix some XSS vulnerabilities in the web application
